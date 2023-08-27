@@ -1,0 +1,13 @@
+intents:
+  - greet
+  - goodbye
+
+responses:
+  utter_greet:
+    - text: "Hello! How can I help you?"
+  utter_goodbye:
+    - text: "Goodbye! Have a great day."
+
+actions:
+  - utter_greet
+  - utter_goodbye
