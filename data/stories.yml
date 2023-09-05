@@ -1,0 +1,18 @@
+version: "2.0"
+stories:
+- story: User browses products
+  steps:
+  - intent: greet
+  - intent: browse_products
+    entities:
+    - location: "New York"
+  - action: action_display_products
+
+- story: User asks for product details
+  steps:
+  - intent: product_details
+    entities:
+    - product: "shoes"
+  - action: action_provide_product_details
+
+# Create more stories for pricing, discounts, negotiation, and purchase.

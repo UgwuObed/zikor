@@ -1,0 +1,73 @@
+version: "2.0"
+nlu:
+- intent: greet
+  examples: |
+    - Hi
+    - Hello
+    - Hey
+
+- intent: browse_products
+  examples: |
+    - Show me products
+    - Display available products
+    - What products are available in [location]?
+    - I need to see the shoes you have
+    - I need 
+
+- intent: product_details
+  examples: |
+    - Tell me about [product]
+    - Give me details of [product]
+
+    - intent: request_product_details
+  examples: |
+    - Tell me more about product 2
+    - What can you tell me about product number 3?
+    - Give me details for the second product
+
+
+- intent: pricing_inquiry
+  examples: |
+    - How much does [product] cost?
+    - What's the price of [product]?
+
+- intent: negotiate_price
+  examples: |
+    - Can you offer a discount for [product]?
+    - I'd like to negotiate the price of [product].
+    - Let's talk about the price.
+    - Can I get a better price for [product]?
+    - Is there room for negotiation on [product]?
+    - What's the best deal you can offer for [product]?
+    - I'm interested in [product], but I'd like to discuss the price.
+    - Can you offer a discount for product 2?
+    - I'd like to negotiate the price of the third product.
+    - Let's talk about the price for the second product
+
+- entity: location
+  examples: |
+    - [Lagos](location)
+    - [Abuja](location)
+    - [Minna](location)
+    - [Ikorodu](location)
+    - [Ikotun](location)
+    - [Agege](location)
+    - [Ikeja](location)
+    - [Kano](location)
+    - [Port Harcourt](location)
+    - [Enugu](location)
+    - [Calabar](location)
+    - [Benin](location)
+    - [Uyo](location)
+    - [Warri](location)
+    - [Edo](location)
+    
+
+- entity: product
+  examples: |
+    - shoes
+    - electronics
+    - clothing
+    - food
+
+
