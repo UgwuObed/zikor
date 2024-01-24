@@ -30,7 +30,7 @@ Route::middleware('guest:admin')->group(function () {
 
     Route::post('admin/reset-password', [NewPasswordController::class, 'store'])
                 ->name('admin.password.store');
-});
+}); 
 
 Route::middleware('auth:admin')->group(function () {
     Route::get('admin/verify-email', EmailVerificationPromptController::class)
@@ -52,5 +52,6 @@ Route::middleware('auth:admin')->group(function () {
     Route::put('admin/password', [PasswordController::class, 'update'])->name('admin.password.update');
 
     Route::post('admin/logout', [AuthenticatedSessionController::class, 'destroy'])
-                ->name('admin.logout');
+    ->name('admin.logout');
+
 });

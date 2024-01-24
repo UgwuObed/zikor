@@ -1,0 +1,344 @@
+body{
+  font-family: 'Offside', cursive;
+}
+  
+.center {
+  justify-content: center;
+  color: #000000;
+  margin-top: 103px;
+  margin-left: 89px;
+}
+
+.list-items {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.list-items li {
+  margin-right: 13rem; 
+}
+
+.list-items a {
+  text-decoration: none;
+  color: #000000;
+  font-size: 18px;
+  font-weight: 1000;
+}
+
+.list-items li.active {
+  border: none;
+  background-color: #ffffff;
+  padding: 15px 32px;
+  text-align: center;
+  box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 5%;
+}
+
+.list-items li.active:hover {
+  background-color: #5e17eb;
+  color: #ffffff;
+}
+
+.list-items li.active:hover a {
+  color: #ffffff;
+}
+
+
+.search-container {
+    display: flex;
+    margin-left: 890px;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 5px 15px;
+    width: 340px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.search-input {
+    border: none;
+    outline: none;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+}
+
+.search-button {
+    background-color: #5E17EB;
+    color: #fff;
+    border: none;
+    outline: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 30px;
+    cursor: pointer;
+    
+    transition: background-color 0.2s ease-in-out;
+}
+
+.search-button:hover {
+    background-color: #9663fc;
+}
+
+.search-icon {
+    margin-right: 5px;
+}
+
+/* Add space and move the table to the right side */
+.table-container {
+  padding: 50px; 
+  margin-right: 50px; 
+}
+
+.table-title{
+  padding-top: 10px;
+  margin-left: 70px;
+}
+
+/* Center the table content */
+.table-container {
+  display: flex;
+  justify-content: center;
+}
+
+/* Center the table itself */
+.product-table {
+  margin: 0 auto;
+}
+
+/* Center the "More" options text */
+.more-options {
+  text-align: center;
+}
+
+
+td, th {
+  text-align: center;
+}
+
+.product-table th {
+  background-color: #f2f2f2;
+  padding: 12px;
+  font-weight: bold;
+}
+
+
+.more-options .edit {
+  color: #dac403;
+  text-decoration: none;
+  display: block;
+  padding: 5px 10px;
+}
+
+.more-options .delete{
+  color: #ff2020;
+  text-decoration: none;
+  display: block;
+  padding: 5px 10px;
+}
+
+.more-options a {
+  color: blue;
+  text-decoration: none;
+  margin-right: 10px; 
+  font-size: 15px;
+}
+
+.more-options .icon-container {
+  display: flex; 
+  justify-content: center;
+}
+
+
+
+.product-table th,
+.product-table td {
+  width: 250px; 
+  min-width: 200px; 
+  background-color: #f2f2f2;
+  height: 120px;
+}
+
+
+
+
+.notification {
+  background-color: #4CAF50;
+  color: #fff;
+  text-align: center;
+  padding: 10px;
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+}
+.notification.show {
+  display: block;
+}
+
+/* CSS styles for the modal container */
+.modal {
+  display: none; 
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); 
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.modal-buttons button + button {
+  margin-left: 10px;
+}
+
+/* Customize the close button */
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #999;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+.modal-content {
+  position: relative; 
+  background-color: #fff;
+  padding: 20px;
+  width: 300px;
+  margin: 100px auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Optional: Style the buttons inside the modal */
+.modal-content button {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 34px;
+  cursor: pointer;
+}
+
+
+.button-1 {
+  appearance: none;
+  border: none;
+  background-color: #5E17EB;
+  border-radius: 5px;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 13px;
+  line-height: normal;
+  margin: 0;
+  margin-left: 40px;
+  min-height: 6px;
+  min-width: 0;
+  outline: none;
+  padding: 16px 24px;
+  text-align: center;
+  text-decoration: none;
+  transition: all 300ms cubic-bezier(.23, 1, 0.32, 1);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  width: 13%;
+  will-change: transform;
+}
+
+.button-1:disabled {
+  pointer-events: none;
+}
+
+.button-1:hover {
+  box-shadow: rgba(113, 115, 231, 0.25) 0 8px 15px;
+  transform: translateY(-2px);
+}
+
+.button-1:active {
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+.tooltip {
+  visibility: hidden;
+  width: 120px;
+  background-color: #1d1d1d;
+  color: #fff;
+  text-align: center;
+  border-radius: 3px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* Show the tooltip on hover */
+.button-1:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.modal-buttons button.no-button {
+  background-color: white;
+  color: #333;
+  border: 2px solid #333;
+}
+
+.modal-buttons button.no-button:hover {
+  background-color: #333;
+  color: white;
+}
+
+.modal-buttons button.yes-button {
+  background-color: #ff6666;
+  color: white;
+  border: none;
+}
+
+.modal-buttons button.yes-button:hover {
+  background-color: #ff4747;
+}
+
+.modal-buttons button + button {
+  margin-left: 10px;
+}

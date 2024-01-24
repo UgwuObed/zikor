@@ -1,0 +1,132 @@
+
+
+body{
+    font-family: 'Offside', cursive;
+}
+.logo {
+    align-items: center;
+    display: flex;
+    width: 100%;
+}
+
+.logoPicture {
+    display: flex;
+    width: 20px;
+    height: 50px;
+}
+
+.signUp {
+    font-weight: bolder;
+}
+
+.form {
+    width: 400px;
+    padding: 100px;
+    border-radius: 8px;
+    bottom: 300px;
+}
+
+.formContainer {
+    margin-top: -90px;
+    background-color: #ffffff;
+    width: 600px;
+    border-radius: 8px;
+}
+
+.label {
+    display: block;
+}
+
+.inputField[type="text"],
+.inputField[type="email"],
+.inputField[type="tel"],
+.inputField[type="password"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.inputField1 {
+    width: 150px;
+    border-radius: 4px;
+    padding: 8px;
+    display: flex;
+    border: 1px solid #ccc;
+}
+
+.inputField2 {
+    position: absolute;
+    width: 150px;
+    border-radius: 4px;
+    padding: 8px;
+    display: block;
+    border: 1px solid #ccc;
+    margin-left: 1px;
+    margin-top: 2px;
+}
+
+.label2 {
+    position: absolute;
+    margin-left: 249px;
+    margin-top: -76px;
+}
+
+.submitButton[type="submit"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #5E17EB;
+    color: #fff;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.nextButton {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #5E17EB;
+    color: #fff;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.errorMessage {
+    padding: 10px !important;
+    border-radius: 0 !important;
+    position: relative;
+    display: inline-block !important;
+    box-shadow: 1px 1px 1px rgb(255, 255, 255);
+    margin-top: 10px;
+    color: #f50606f1;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.backButtonContainer {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.backButton {
+    background: none;
+    border: none;
+    color: black;
+    cursor: pointer;
+    padding: 0;
+    font-size: 24px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+.registration-link a {
+  text-decoration: none;
+  color: #5E17EB; 
+}
+
+.registration-link a:hover {
+  text-decoration: underline;
+}
