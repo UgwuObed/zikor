@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminAuth\NewPasswordController;
 use App\Http\Controllers\AdminAuth\PasswordController;
 use App\Http\Controllers\AdminAuth\PasswordResetLinkController;
 use App\Http\Controllers\AdminAuth\VerifyEmailController;
+use App\Http\Controllers\AdminAuth\AdminDashboardController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -16,7 +17,7 @@ Route::middleware('guest:admin')->group(function () {
     Route::get('admin/login', [AuthenticatedSessionController::class, 'create'])
                 ->name('admin.login');
 
-    Route::post('admin/login', [AuthenticatedSessionController::class, 'store'])->middleware('cors');
+    Route::post('admin/login', [AuthenticatedSessionController::class, 'store']);
 
 
     Route::get('admin/forgot-password', [PasswordResetLinkController::class, 'create'])
@@ -33,6 +34,9 @@ Route::middleware('guest:admin')->group(function () {
 }); 
 
 Route::middleware('auth:admin')->group(function () {
+
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'dashboard'])->name('admin.dashboard');
+    
     Route::get('admin/verify-email', EmailVerificationPromptController::class)
                 ->name('admin.verification.notice');
 

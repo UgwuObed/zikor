@@ -25,6 +25,7 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\CorsMiddleware::class,
         
         
+        
     ];
 
     /**
