@@ -36,13 +36,12 @@
         Features
       </div>
       <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBootstrap"
+        <a class="nav-link collapsed" href="{{ route('admin.users') }}"
           aria-expanded="true" aria-controls="collapseBootstrap">
           <i class="far fa-fw fa-window-maximize"></i>
-          <span>Bootstrap UI</span>
+          <span>Users</span>
         </a>
         <div id="collapseBootstrap" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-
         </div>
       </li>
       <li class="nav-item">
@@ -626,9 +625,9 @@
         </div>
 
         </div>
-        <!---Container Fluid-->
+        
       </div>
-      <!-- Footer -->
+      
       <footer class="sticky-footer bg-white">
         <div class="container my-auto">
           <div class="copyright text-center my-auto"
@@ -638,7 +637,7 @@
         <div class="container my-auto py-2">
         </div>
       </footer>
-      <!-- Footer -->
+     
     </div>
   </div>
 

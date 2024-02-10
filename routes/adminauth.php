@@ -58,4 +58,10 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('admin.logout');
 
+    Route::get('admin/get-users', [AdminDashboardController::class, 'getUsers']);
+
+   Route::get('/admin/users', [AdminDashboardController::class, 'showUsersWithProducts'])->name('admin.users');
+   Route::delete('/admin/users/{userId}/products/{productId}', [AdminDashboardController::class, 'deleteProduct'])->name('admin.product.delete');
+   Route::delete('/admin/users/{userId}', [AdminDashboardController::class, 'deleteUser'])->name('admin.user.delete');
+
 });
