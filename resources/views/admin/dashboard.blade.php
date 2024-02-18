@@ -73,9 +73,10 @@
         </div>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="ui-colors.html">
-          <i class="fas fa-fw fa-palette"></i>
-          <span>UI Colors</span>
+        <a class="nav-link collapsed" href="{{ route('admin.categories') }}"
+          aria-expanded="true" aria-controls="collapseBootstrap">
+          <i class="far fa-fw fa-window-maximize"></i>
+          <span>Categories</span>
         </a>
       </li>
       <hr class="sidebar-divider">

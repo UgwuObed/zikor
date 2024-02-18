@@ -28,6 +28,14 @@
                             <label for="quantity" class="block">Quantity</label>
                             <input type="number" name="quantity" id="quantity" class="form-input" required>
                         </div>
+
+                            <select name="category_id">
+                                <option value="" disabled selected>Select a category</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+
                         <div>
                             <label for="description" class="block">Description</label>
                             <textarea name="description" id="description" class="form-input" rows="3"></textarea>

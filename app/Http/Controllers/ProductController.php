@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +15,8 @@ class ProductController extends Controller
 {
  public function create()
  {
-    return view('product-upload');
+    $categories = Category::all();
+    return view('product-upload', compact('categories'));
   }
 
 public function showProducts()
@@ -48,6 +50,7 @@ public function showProducts()
       'quantity' => 'required|integer',
       'description' => 'nullable|string',
       'image' => 'required|image|max:2048',
+      'category_id' => 'required|exists:categories,id',
 
     ]);
 
@@ -70,6 +73,7 @@ public function showProducts()
         'quantity' => $request->quantity,
         'description' => $request->description,
         'image' => $imagePath,
+        'category_id' => $request->category_id,
       ]);
 
       return response()->json(['message' => 'Product uploaded successfully', 'product' => $product], 201);
@@ -95,6 +99,7 @@ public function showProducts()
       'quantity' => 'required|integer',
       'description' => 'nullable|string',
       'image' => 'nullable|image|max:2048',
+      'category_id' => $request->category_id,
     ]);
 
 

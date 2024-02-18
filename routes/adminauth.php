@@ -64,4 +64,11 @@ Route::middleware('auth:admin')->group(function () {
    Route::delete('/admin/users/{userId}/products/{productId}', [AdminDashboardController::class, 'deleteProduct'])->name('admin.product.delete');
    Route::delete('/admin/users/{userId}', [AdminDashboardController::class, 'deleteUser'])->name('admin.user.delete');
 
+
+    Route::post('admin/categories', [AdminDashboardController::class, 'createCategory'])->name('admin.categories.create');
+    Route::put('admin/categories/{categoryId}', [AdminDashboardController::class, 'updateCategory'])->name('admin.categories.update');
+    Route::delete('admin/categories/{categoryId}', [AdminDashboardController::class, 'deleteCategory'])->name('admin.categories.delete');
+    Route::get('/admin/categories', [AdminDashboardController::class, 'categories'])->name('admin.categories');
+     Route::get('/admin/categories', [AdminDashboardController::class, 'listCategories'])->name('admin.categories');
+
 });

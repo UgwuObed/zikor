@@ -24,6 +24,11 @@ class Product extends Model
         'image',
     ];
 
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+    
     /**
      * Get the user that owns the product.
      */
