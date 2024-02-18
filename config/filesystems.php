@@ -63,6 +63,15 @@ return [
             'api_secret' => env('CLOUDINARY_API_SECRET'),
         ],
 
+        'tigris' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => 'lhr',
+            'bucket' => env('BUCKET_NAME'),
+            'endpoint' => env('AWS_ENDPOINT_URL_S3'),
+        ],
+
 
     ],
 

@@ -6,6 +6,7 @@ use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
 
 class AdminDashboardController extends Controller
 {

@@ -17,8 +17,9 @@
                             <p class="text-gray-600">{{ $user->business_name }}</p>
                             <h5 class="font-semibold mt-2">Products:</h5>
                             <ul>
-                                @foreach ($user->products as $product)
+                                @foreach ($user->products as $product) 
                                     <li>{{ $product->name }} - ₦{{ number_format($product->main_price, 2) }}</li>
+                        
 
                             <form action="{{ route('admin.product.delete', ['userId' => $user->id, 'productId' => $product->id]) }}" method="POST">
                         @csrf
