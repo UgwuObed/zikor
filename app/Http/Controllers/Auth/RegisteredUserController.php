@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -28,7 +28,7 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): JsonResponse
     {
         $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
@@ -58,6 +58,10 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect('/dashboard')->with('success', 'Registration successful. Welcome to the dashboard!');
+     return response()->json([
+        'user' => $user,
+        'message' => 'Registration successful.',
+        'redirect' => '/home',
+      ], 201);
     }
 }
