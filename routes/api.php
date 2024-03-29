@@ -2,18 +2,51 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AuthController;
+use Laravel\Passport\Http\Controllers\AccessTokenController;
+use Laravel\Passport\Http\Controllers\AuthorizationController;
+use App\Http\Middleware\AdminAuthorization;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group(['prefix' => '/oauth'], function () {
+    Route::post('token', [AccessTokenController::class, 'issue']);
+    Route::post('authorize', [AuthorizationController::class, 'authorize']);
+    Route::post('refresh', [AccessTokenController::class, 'refresh']);
+    Route::post('revoke', [AccessTokenController::class, 'revoke']);
 });
+
+// Public routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/admin/login', [AuthController::class, 'adminLogin']); 
+
+// Routes requiring API authentication
+Route::middleware('auth:api')->group(function () {
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::put('/products/{id}', [ProductController::class, 'update']);
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+    Route::get('/categories', [ProductController::class, 'create']);
+});
+
+
+
+Route::middleware(['auth:api', \App\Http\Middleware\AdminAuthorization::class])->prefix('admin')->group(function () {
+    // Admin controller routes (API)
+    Route::get('dashboard', [AdminDashboardController::class, 'dashboard']);
+     // User management
+     Route::get('/users', [AdminDashboardController::class, 'showUsersWithProducts'])->name('admin.users.list');
+     Route::delete('users/{userId}', [AdminDashboardController::class, 'deleteUser'])->name('admin.users.delete');
+ 
+     // Product management
+     Route::delete('users/{userId}/products/{productId}', [AdminDashboardController::class, 'deleteProduct'])->name('admin.products.delete');
+ 
+     // Category management
+     Route::post('categories', [AdminDashboardController::class, 'createCategory'])->name('admin.categories.create');
+     Route::put('categories/{categoryId}', [AdminDashboardController::class, 'updateCategory'])->name('admin.categories.update');
+     Route::delete('categories/{categoryId}', [AdminDashboardController::class, 'deleteCategory'])->name('admin.categories.delete');
+     Route::get('categories', [AdminDashboardController::class, 'listCategories'])->name('admin.categories.list');
+});
+

@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Passport\HasApiTokens;
+use Illuminate\Support\Facades\Hash;
 
-class User extends Authenticatable
+
+
+class User extends Authenticatable 
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use  HasApiTokens, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -27,6 +29,7 @@ class User extends Authenticatable
         'state',
         'country',
         'city',
+        'is_admin',
     ];
 
     /**
@@ -39,18 +42,46 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime:Y-m-d\TH:i:s\Z',
+    ];
+
+
     public function products()
     {
         return $this->hasMany(Product::class);
     }
 
+
+
     /**
-     * The attributes that should be cast.
+     * Get the JWT identifier.
      *
-     * @var array<string, string>
+     * @return int
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
+    public function getJWTIdentifier()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Get the JWT token claim.
+     *
+     * @return array
+     */
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
+    // Accessor method to check if the user is an admin
+    public function isAdmin()
+    {
+        return $this->is_admin;
+    }
 }

@@ -156,10 +156,12 @@ return [
     */
 
     'providers' => ServiceProvider::defaultProviders()->merge([
+
+        Laravel\Passport\PassportServiceProvider::class,
         /*
          * Package Service Providers...
          */
-
+        
         /*
          * Application Service Providers...
          */

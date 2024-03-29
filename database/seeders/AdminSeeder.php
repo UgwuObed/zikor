@@ -1,33 +1,25 @@
 <?php
 
-
 namespace Database\Seeders;
 
-
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-
-
 
 class AdminSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
     public function run()
     {
-        
-        DB::table('admins')->insert([
-            'name' => 'Super Admin',
-            'email' => 'admin@zikor.com',
-            'password' => Hash::make('superadminzikor'),
-            'created_at' => now(),
-            'updated_at' => now(),
+        DB::table('users')->insert([
+            'first_name' => 'Admin',
+            'last_name' => 'Zikor',
+            'email' => 'admin@zikor.io',
+            'password' => Hash::make('zikoradminpassword'),
+            'is_admin' => true,
         ]);
-
-        
     }
 }

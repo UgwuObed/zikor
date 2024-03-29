@@ -56,13 +56,6 @@ return [
             'throw' => false,
         ],
 
-        'cloudinary' => [
-            'driver' => 'cloudinary',
-            'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-            'api_key' => env('CLOUDINARY_API_KEY'),
-            'api_secret' => env('CLOUDINARY_API_SECRET'),
-        ],
-
         'tigris' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -71,8 +64,6 @@ return [
             'bucket' => env('BUCKET_NAME'),
             'endpoint' => env('AWS_ENDPOINT_URL_S3'),
         ],
-
-
     ],
 
     /*

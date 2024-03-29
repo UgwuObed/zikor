@@ -1,27 +1,111 @@
-# excludes from the docker image/build
-
-# 1. Ignore Laravel-specific files we don't need
-bootstrap/cache/*
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/views/*
-storage/logs/*
-*.env*
-.rr.yml
-rr
+# flyctl launch added from .gitignore
+.phpunit.cache
+node_modules
+public\build
+public\hot
+public\storage
+storage\*.key
 vendor
-
-# 2. Ignore common files/directories we don't need
-fly.toml
-.vscode
+**\.env
+**\.env.backup
+**\.env.production
+**\.phpunit.result.cache
+**\Homestead.json
+**\Homestead.yaml
+**\auth.json
+**\npm-debug.log
+**\yarn-error.log
+.fleet
 .idea
-**/*node_modules
-**.git
-**.gitignore
-**.gitattributes
-**.sass-cache
-**/*~
-**/*.log
-**/.DS_Store
-**/Thumbs.db
-public/hot
+.vscode
+
+# flyctl launch added from bootstrap\cache\.gitignore
+bootstrap\cache\**\*
+!bootstrap\cache\**\.gitignore
+
+# flyctl launch added from database\.gitignore
+database\**\*.sqlite*
+
+# flyctl launch added from storage\app\.gitignore
+storage\app\**\*
+!storage\app\**\public
+!storage\app\**\.gitignore
+
+# flyctl launch added from storage\app\public\.gitignore
+storage\app\public\**\*
+!storage\app\public\**\.gitignore
+
+# flyctl launch added from storage\framework\.gitignore
+storage\framework\**\compiled.php
+storage\framework\**\config.php
+storage\framework\**\down
+storage\framework\**\events.scanned.php
+storage\framework\**\maintenance.php
+storage\framework\**\routes.php
+storage\framework\**\routes.scanned.php
+storage\framework\**\schedule-*
+storage\framework\**\services.json
+
+# flyctl launch added from storage\framework\cache\.gitignore
+storage\framework\cache\**\*
+!storage\framework\cache\**\data
+!storage\framework\cache\**\.gitignore
+
+# flyctl launch added from storage\framework\cache\data\.gitignore
+storage\framework\cache\data\**\*
+!storage\framework\cache\data\**\.gitignore
+
+# flyctl launch added from storage\framework\sessions\.gitignore
+storage\framework\sessions\**\*
+!storage\framework\sessions\**\.gitignore
+
+# flyctl launch added from storage\framework\testing\.gitignore
+storage\framework\testing\**\*
+!storage\framework\testing\**\.gitignore
+
+# flyctl launch added from storage\framework\views\.gitignore
+storage\framework\views\**\*
+!storage\framework\views\**\.gitignore
+
+# flyctl launch added from storage\logs\.gitignore
+storage\logs\**\*
+!storage\logs\**\.gitignore
+
+# flyctl launch added from vendor\fly-apps\dockerfile-laravel\.gitignore
+vendor\fly-apps\dockerfile-laravel\vendor
+vendor\fly-apps\dockerfile-laravel\.idea
+vendor\fly-apps\dockerfile-laravel\.vscode
+vendor\fly-apps\dockerfile-laravel\.vagrant
+vendor\fly-apps\dockerfile-laravel\**\.phpunit.result.cache
+
+# flyctl launch added from vendor\fly-apps\dockerfile-laravel\storage\app\.gitignore
+vendor\fly-apps\dockerfile-laravel\storage\app\**\*
+!vendor\fly-apps\dockerfile-laravel\storage\app\**\.gitignore
+
+# flyctl launch added from vendor\fly-apps\dockerfile-laravel\storage\framework\cache\.gitignore
+vendor\fly-apps\dockerfile-laravel\storage\framework\cache\**\*
+!vendor\fly-apps\dockerfile-laravel\storage\framework\cache\**\.gitignore
+
+# flyctl launch added from vendor\fly-apps\dockerfile-laravel\storage\framework\views\.gitignore
+vendor\fly-apps\dockerfile-laravel\storage\framework\views\**\*
+!vendor\fly-apps\dockerfile-laravel\storage\framework\views\**\.gitignore
+
+# flyctl launch added from vendor\hamcrest\hamcrest-php\.gitignore
+vendor\hamcrest\hamcrest-php\**\composer.lock
+vendor\hamcrest\hamcrest-php\**\vendor
+
+# flyctl launch added from vendor\psr\container\.gitignore
+vendor\psr\container\**\composer.lock
+vendor\psr\container\**\composer.phar
+vendor\psr\container\vendor
+
+# flyctl launch added from vendor\psr\event-dispatcher\.gitignore
+vendor\psr\event-dispatcher\vendor
+vendor\psr\event-dispatcher\**\composer.lock
+
+# flyctl launch added from vendor\spatie\ignition\resources\compiled\.gitignore
+vendor\spatie\ignition\resources\compiled\**\*
+!vendor\spatie\ignition\resources\compiled\**\.gitignore
+!vendor\spatie\ignition\resources\compiled\**\ignition.css
+!vendor\spatie\ignition\resources\compiled\**\ignition.js
+fly.toml

@@ -6,23 +6,23 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
-        "cloudinary-labs/cloudinary-laravel": "^2.0",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.10",
+        "laravel/passport": "^11.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
-        "league/flysystem-aws-s3-v3": "^3.24",
-        "predis/predis": "^2.2"
+        "league/flysystem-aws-s3-v3": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
-        "laravel/breeze": "^1.28",
+        "fly-apps/dockerfile-laravel": "^1.0",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.18",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^7.0",
-        "pestphp/pest": "^2.0",
-        "pestphp/pest-plugin-laravel": "^2.0",
+        "pestphp/pest": "^2.34",
+        "phpunit/php-code-coverage": "^10.1.5",
+        "phpunit/phpunit": "^10.5.10",
         "spatie/laravel-ignition": "^2.0"
     },
     "autoload": {
@@ -51,6 +51,8 @@
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
         ]
+
+
     },
     "extra": {
         "laravel": {

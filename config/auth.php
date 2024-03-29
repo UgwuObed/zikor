@@ -39,11 +39,12 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+            'expires_in' => 86400,
         ],
 
-    'admin' => [
-            'driver' => 'session',
-            'provider' => 'admins',
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
         ],
 
     ],
@@ -71,10 +72,7 @@ return [
             'model' => App\Models\User::class,
         ],
 
-    'admins' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Admin::class,
-    ],
+    
 
         // 'users' => [
         //     'driver' => 'database',
