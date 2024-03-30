@@ -42,8 +42,7 @@ Route::middleware(['auth:api', \App\Http\Middleware\AdminAuthorization::class])-
  
      // Product management
      Route::delete('users/{userId}/products/{productId}', [AdminDashboardController::class, 'deleteProduct'])->name('admin.products.delete');
- 
-     // Category management
+
      Route::post('categories', [AdminDashboardController::class, 'createCategory'])->name('admin.categories.create');
      Route::put('categories/{categoryId}', [AdminDashboardController::class, 'updateCategory'])->name('admin.categories.update');
      Route::delete('categories/{categoryId}', [AdminDashboardController::class, 'deleteCategory'])->name('admin.categories.delete');
