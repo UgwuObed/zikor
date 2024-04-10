@@ -27,13 +27,17 @@ class ProductController extends Controller
     public function showProducts()
     {
         $user = auth()->user();
-        $products = $user->products->map(function ($product) {
-            $product->image_url = Storage::disk('tigris')->url($product->image);
-            return $product;
+        $products = $user->products()->with('category')->get();
+    
+        $productData = $products->map(function ($product) {
+            $productData = $product->toArray();
+            $productData['image_url'] = Storage::disk('tigris')->url($product->image);
+            return $productData;
         });
-
-        return view('products-list', compact('products'));
+    
+        return response()->json(['products' => $productData]);
     }
+    
 
     public function index()
     {
@@ -72,6 +76,7 @@ class ProductController extends Controller
                 'image' => $imagePath,
                 'category_id' => $request->category_id,
             ]);
+
 
             return response()->json(['message' => 'Product uploaded successfully', 'product' => $product], 201);
         } catch (\Exception $e) {

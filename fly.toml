@@ -49,6 +49,10 @@ console_command = 'php /var/www/html/artisan tinker'
   source = "storage_vol"
   destination = "/var/www/html/storage"
 
+[processes]
+app = ""
+worker = "php artisan queue:listen"
+cron = "cron -f"
 
 [[vm]]
   memory = '1gb'
