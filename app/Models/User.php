@@ -58,6 +58,11 @@ class User extends Authenticatable
     }
 
 
+    public function userBotMappings()
+    {
+        return $this->hasMany(UserBotMapping::class);
+    }
+
 
     /**
      * Get the JWT identifier.

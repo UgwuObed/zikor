@@ -6,9 +6,11 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ZikorController;
 use Laravel\Passport\Http\Controllers\AccessTokenController;
 use Laravel\Passport\Http\Controllers\AuthorizationController;
 use App\Http\Middleware\AdminAuthorization;
+
 
 Route::group(['prefix' => '/oauth'], function () {
     Route::post('token', [AccessTokenController::class, 'issue']);
@@ -21,6 +23,7 @@ Route::group(['prefix' => '/oauth'], function () {
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/admin/login', [AuthController::class, 'adminLogin']); 
+Route::get('/rasa/products', [ZikorController::class, 'getUserProductsForRasa']);
 
 // Routes requiring API authentication
 Route::middleware('auth:api')->group(function () {

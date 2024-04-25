@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Exception;
 use App\Models\User;
+use App\Models\ChatbotInstance;
+use App\Services\RasaService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -14,6 +16,15 @@ use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
+
+  protected $rasaService;
+
+    public function __construct(RasaService $rasaService)
+    {
+        $this->rasaService = $rasaService;
+    }
+
+
     public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -45,13 +56,21 @@ class AuthController extends Controller
             'is_admin' => false,
         ]);
 
+        $chatbotInstance = ChatbotInstance::create([
+            'user_id' => $user->id,
+        ]);
+
+        $this->rasaService->notifyRasaAboutInstance($user, $chatbotInstance);
+
         $token = $user->createToken('auth_token')->accessToken;
 
         return response()->json([
             'user' => $user,
             'token' => $token,
+            'chatbot_instance' => $chatbotInstance,
             'redirect' => '/account', 
         ], 201);
+
     }
 
     public function login(Request $request): JsonResponse
@@ -101,4 +120,5 @@ class AuthController extends Controller
             'redirect' => '/dashboard', 
         ], 201);
     }
+
 }
