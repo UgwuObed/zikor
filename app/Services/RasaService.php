@@ -15,7 +15,7 @@ class RasaService
         // You may need to use Guzzle or another HTTP client to send the request
 
         // Example:
-        $rasaEndpoint = 'http://0.0.0.0:5005/api/register_instance';
+        $rasaEndpoint = 'http://localhost:5005/api/register_instance';
         $requestData = [
             'user_id' => $user->id,
             'instance_id' => $instance->id,

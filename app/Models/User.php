@@ -30,6 +30,7 @@ class User extends Authenticatable
         'country',
         'city',
         'is_admin',
+        'unique_identifier',
     ];
 
     /**
@@ -55,12 +56,6 @@ class User extends Authenticatable
     public function products()
     {
         return $this->hasMany(Product::class);
-    }
-
-
-    public function userBotMappings()
-    {
-        return $this->hasMany(UserBotMapping::class);
     }
 
 

@@ -2,36 +2,38 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ChatbotInstance;
 use Illuminate\Http\Request;
-
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Laravel\Passport\ClientRepository;
+use Illuminate\Support\Facades\Log;
 
 class ZikorController extends Controller
+
 {
+    public function interactWithAI(Request $request)
+    {
+        // Send user input to OpenAI
+        $response = app(\App\Services\OpenAIService::class)->sendMessage($request->input('user_input'));
 
-public function getUserProductsForRasa(Request $request)
-{
-    // Retrieve the authenticated user
-    $user = $request->user();
+        // Process the response as needed
+        $aiResponse = $response['choices'][0]['text'];
 
-    // Retrieve the user's chatbot instance
-    $chatbotInstance = ChatbotInstance::where('user_id', $user->id)->first();
-
-    // If the chatbot instance is found, retrieve the products associated with it
-    if ($chatbotInstance) {
-        $products = $chatbotInstance->products()->with('category')->get();
-
-        // Transform product data
-        $productData = $products->map(function ($product) {
-            $productData = $product->toArray();
-            $productData['image_url'] = Storage::disk('tigris')->url($product->image);
-            return $productData;
-        });
-
-        // Return product data as JSON response
-        return response()->json(['products' => $productData]);
-    } else {
-        // If no chatbot instance is found, return an empty response or an error
-        return response()->json(['error' => 'Chatbot instance not found'], 404);
+        return response()->json(['response' => $aiResponse]);
     }
+
+    public function validateBusinessName(Request $request)
+    {
+        $businessName = $request->get('business_name');
+
+        $user = User::where('business_name', $businessName)->first();
+
+        if ($user) {
+            return response()->json(['user_id' => $user->id]);
+        } else {
+            return response()->json(['error' => 'Business not found'], 404);
+        }
+    }
+    
 }

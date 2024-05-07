@@ -7,23 +7,16 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Exception;
 use App\Models\User;
-use App\Models\ChatbotInstance;
-use App\Services\RasaService;
+use App\Services\TwilioService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Laravel\Passport\ClientRepository;
+use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
-
-  protected $rasaService;
-
-    public function __construct(RasaService $rasaService)
-    {
-        $this->rasaService = $rasaService;
-    }
-
 
     public function register(Request $request): JsonResponse
     {
@@ -32,7 +25,7 @@ class AuthController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', 'string', 'min:8', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[^a-zA-Z0-9_]/'],
-            'business_name' => ['nullable', 'string', 'max:255'],
+            'business_name' => ['nullable', 'string', 'max:255', 'unique:users'],
             'phone' => ['nullable', 'string', 'max:255'],
             'country' => ['nullable', 'string', 'max:255'],
             'state' => ['nullable', 'string', 'max:255'],
@@ -42,7 +35,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-
+        
         $user = User::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -54,23 +47,19 @@ class AuthController extends Controller
             'state' => $request->state,
             'city' => $request->city,
             'is_admin' => false,
-        ]);
-
-        $chatbotInstance = ChatbotInstance::create([
-            'user_id' => $user->id,
-        ]);
-
-        $this->rasaService->notifyRasaAboutInstance($user, $chatbotInstance);
-
-        $token = $user->createToken('auth_token')->accessToken;
-
-        return response()->json([
+            'unique_identifier' => Str::uuid()->toString(),
+          ]);
+        
+          $token = $user->createToken('auth_token')->accessToken;
+        
+          $uniqueLink = route('chat.init', ['uniqueIdentifier' => $user->unique_identifier]);
+        
+          return response()->json([
             'user' => $user,
             'token' => $token,
-            'chatbot_instance' => $chatbotInstance,
-            'redirect' => '/account', 
-        ], 201);
-
+            'uniqueLink' => $uniqueLink,
+            'redirect' => '/account',
+          ], 201);
     }
 
     public function login(Request $request): JsonResponse

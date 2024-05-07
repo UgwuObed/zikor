@@ -8,10 +8,12 @@ use App\Models\Category;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use GuzzleHttp\Client;
 use Exception;
 
 class ProductController extends Controller
 {
+
     public function __construct()
     {
         $this->middleware('auth:api');
@@ -138,4 +140,5 @@ class ProductController extends Controller
 
         return response()->json(['message' => 'Product deleted successfully'], 200);
     }
+
 }
