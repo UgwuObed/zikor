@@ -47,17 +47,19 @@ class AuthController extends Controller
             'state' => $request->state,
             'city' => $request->city,
             'is_admin' => false,
-            'unique_identifier' => Str::uuid()->toString(),
+            'unique_identifier' => Str::random(5), 
           ]);
         
+          $whatsappChatLink = $this->generateWhatsAppChatLink($user);
+
           $token = $user->createToken('auth_token')->accessToken;
         
-          $uniqueLink = route('chat.init', ['uniqueIdentifier' => $user->unique_identifier]);
+          
         
           return response()->json([
             'user' => $user,
             'token' => $token,
-            'uniqueLink' => $uniqueLink,
+            'uniqueLink' => $whatsappChatLink, 
             'redirect' => '/account',
           ], 201);
     }
@@ -109,5 +111,25 @@ class AuthController extends Controller
             'redirect' => '/dashboard', 
         ], 201);
     }
+
+    public function generateWhatsAppChatLink(User $user)
+    {
+    // Construct URL with user information as query parameters
+    $queryParams = http_build_query([
+        $user->id,
+        $user->unique_identifier,
+        $user->business_name,
+        
+    
+    ]);
+
+    // WhatsApp number associated with your Infobip Answers chatbot
+    $whatsappNumber = '447860099299';
+
+    // Construct WhatsApp chat link
+    $whatsappChatLink = 'https://wa.me/' . $whatsappNumber . '?' . $queryParams;
+
+    return $whatsappChatLink;
+}
 
 }
