@@ -116,17 +116,12 @@ class AuthController extends Controller
     {
     // Construct URL with user information as query parameters
     $queryParams = http_build_query([
-        $user->id,
         $user->unique_identifier,
-        $user->business_name,
-        
-    
     ]);
 
-    // WhatsApp number associated with your Infobip Answers chatbot
-    $whatsappNumber = '447860099299';
+    
+    $whatsappNumber = '2348103982074';
 
-    // Construct WhatsApp chat link
     $whatsappChatLink = 'https://wa.me/' . $whatsappNumber . '?' . $queryParams;
 
     return $whatsappChatLink;
