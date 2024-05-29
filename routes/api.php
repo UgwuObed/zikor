@@ -25,8 +25,6 @@ Route::group(['prefix' => '/oauth'], function () {
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/admin/login', [AuthController::class, 'adminLogin']); 
-Route::post('/validate-business-name', [ZikorController::class, 'validateBusinessName']);
-Route::post('/interact-with-ai', [ZikorController::class, 'interactWithAI']);
 Route::get('/chat/init/{uniqueIdentifier}', [ChatController::class, 'initiateChat'])->name('chat.init');
 Route::post('/chat/webhook/{uniqueIdentifier}', [ChatController::class, 'handleWebhook'])->name('chat.webhook');
 

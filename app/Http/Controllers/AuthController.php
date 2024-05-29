@@ -30,6 +30,7 @@ class AuthController extends Controller
             'country' => ['nullable', 'string', 'max:255'],
             'state' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:255'],
+            'is_cac_registered' => ['required', 'boolean'],
         ]);
 
         if ($validator->fails()) {
@@ -47,6 +48,7 @@ class AuthController extends Controller
             'state' => $request->state,
             'city' => $request->city,
             'is_admin' => false,
+            'is_cac_registered' => $request->is_cac_registered,
             'unique_identifier' => Str::random(5), 
           ]);
         
@@ -114,7 +116,6 @@ class AuthController extends Controller
 
     public function generateWhatsAppChatLink(User $user)
     {
-    // Construct URL with user information as query parameters
     $queryParams = http_build_query([
         $user->unique_identifier,
     ]);
