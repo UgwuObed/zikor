@@ -40,11 +40,11 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'host' => $DATABASE_URL["host"] ?? null,
-            'port' => $DATABASE_URL["port"] ?? 5432,
-            'database' => ltrim($DATABASE_URL["path"] ?? '', "/"),
-            'username' => $DATABASE_URL["user"] ?? null,
-            'password' => $DATABASE_URL["pass"] ?? null,
+            'host' => $DATABASE_URL["host"] ?? env('DB_HOST', '127.0.0.1'),
+            'port' => $DATABASE_URL["port"] ?? env('DB_PORT', '5432'),
+            'database' => ltrim($DATABASE_URL["path"] ?? env('DB_DATABASE', 'forge'), "/"),
+            'username' => $DATABASE_URL["user"] ?? env('DB_USERNAME', 'forge'),
+            'password' => $DATABASE_URL["pass"] ?? env('DB_PASSWORD', ''),
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
