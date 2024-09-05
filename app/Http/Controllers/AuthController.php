@@ -5,19 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Exception;
 use App\Models\User;
-use App\Services\TwilioService;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
-use Laravel\Passport\ClientRepository;
-use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-
     public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -34,9 +28,16 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            $errors = $validator->errors()->toArray();
+            $formattedErrors = [];
+
+            foreach ($errors as $field => $messages) {
+                $formattedErrors[$field] = $messages[0]; // Take the first error message for each field
+            }
+
+            return response()->json($formattedErrors, 422);
         }
-        
+
         $user = User::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -49,35 +50,42 @@ class AuthController extends Controller
             'city' => $request->city,
             'is_admin' => false,
             'is_cac_registered' => $request->is_cac_registered,
-            'unique_identifier' => Str::random(5), 
-          ]);
-        
-          $whatsappChatLink = $this->generateWhatsAppChatLink($user);
+            'unique_identifier' => Str::random(5),
+        ]);
 
-          $token = $user->createToken('auth_token')->accessToken;
-        
-          
-        
-          return response()->json([
+        $whatsappChatLink = $this->generateWhatsAppChatLink($user);
+        $token = $user->createToken('auth_token')->accessToken;
+
+        return response()->json([
+            'message' => 'Registration successful!',
             'user' => $user,
             'token' => $token,
-            'uniqueLink' => $whatsappChatLink, 
-            'redirect' => '/account',
-          ], 201);
+            'uniqueLink' => $whatsappChatLink,
+        ], 201);
     }
 
     public function login(Request $request): JsonResponse
     {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()], 422);
+        }
+
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
             $token = $user->createToken('auth_token')->accessToken;
+
             return response()->json([
+                'message' => 'Login successful!',
                 'user' => $user,
                 'token' => $token,
-                'redirect' => '/home', 
-            ], 201);
+            ], 200);
         } else {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
@@ -85,47 +93,42 @@ class AuthController extends Controller
 
     public function adminLogin(Request $request): JsonResponse
     {
-        
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',
         ]);
-    
-    
+
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json(['errors' => $validator->errors()->first()], 422);
         }
 
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
-    
+
         $user = Auth::user();
-    
+
         if (!$user->is_admin) {
             return response()->json(['error' => 'Unauthorized access'], 403);
         }
-    
+
         $token = $user->createToken('auth_token')->accessToken;
-    
+
         return response()->json([
+            'message' => 'Admin login successful!',
             'token' => $token,
-            'redirect' => '/dashboard', 
-        ], 201);
+        ], 200);
     }
 
-    public function generateWhatsAppChatLink(User $user)
+    private function generateWhatsAppChatLink(User $user)
     {
-    $queryParams = http_build_query([
-        $user->unique_identifier,
-    ]);
+        $queryParams = http_build_query([
+            '0' => $user->unique_identifier,
+        ]);
 
-    
-    $whatsappNumber = '2348103982074';
+        $whatsappNumber = '2348103982074';
+        $whatsappChatLink = 'https://wa.me/' . $whatsappNumber . '?' . $queryParams;
 
-    $whatsappChatLink = 'https://wa.me/' . $whatsappNumber . '?' . $queryParams;
-
-    return $whatsappChatLink;
-}
-
+        return $whatsappChatLink;
+    }
 }
