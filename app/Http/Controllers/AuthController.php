@@ -32,7 +32,7 @@ class AuthController extends Controller
             $formattedErrors = [];
 
             foreach ($errors as $field => $messages) {
-                $formattedErrors[$field] = $messages[0]; // Take the first error message for each field
+                $formattedErrors[$field] = $messages[0]; 
             }
 
             return response()->json($formattedErrors, 422);
