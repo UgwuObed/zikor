@@ -65,6 +65,11 @@ return [
             'url' => env('AWS_ENDPOINT_URL_S3'),
         ],
 
+        'cloudinary' => [
+            'driver' => 'cloudinary',
+    ],
+
+
     ],
 
     /*

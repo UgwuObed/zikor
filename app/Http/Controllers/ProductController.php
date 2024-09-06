@@ -8,12 +8,10 @@ use App\Models\Category;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use GuzzleHttp\Client;
 use Exception;
 
 class ProductController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware('auth:api');
@@ -21,7 +19,6 @@ class ProductController extends Controller
 
     public function create()
     {
-       
         $categories = Category::all();
         return response()->json(['categories' => $categories]);
     }
@@ -33,13 +30,13 @@ class ProductController extends Controller
     
         $productData = $products->map(function ($product) {
             $productData = $product->toArray();
-            $productData['image_url'] = Storage::disk('tigris')->url($product->image);
+  
+            $productData['image_url'] = Storage::disk('cloudinary')->url($product->image);
             return $productData;
         });
     
         return response()->json(['products' => $productData]);
     }
-    
 
     public function index()
     {
@@ -60,14 +57,20 @@ class ProductController extends Controller
             'image' => 'required|image|max:2048',
             'category_id' => 'required|exists:categories,id',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
         }
-
+    
         try {
-            $imagePath = Storage::disk('tigris')->putFile('product_images', $request->file('image'));
-
+            // Upload to Cloudinary using the SDK directly
+            $uploadedFileUrl = cloudinary()->upload($request->file('image')->getRealPath(), [
+                'folder' => 'product_images',
+            ])->getSecurePath();
+    
+            // Log success upload
+            Log::info('Image uploaded successfully: ' . $uploadedFileUrl);
+    
             $user = auth()->user();
             $product = $user->products()->create([
                 'name' => $request->name,
@@ -75,17 +78,17 @@ class ProductController extends Controller
                 'discount_price' => $request->discount_price,
                 'quantity' => $request->quantity,
                 'description' => $request->description,
-                'image' => $imagePath,
+                'image' => $uploadedFileUrl, // Save the Cloudinary image URL
                 'category_id' => $request->category_id,
             ]);
-
-
+    
             return response()->json(['message' => 'Product uploaded successfully', 'product' => $product], 201);
-        } catch (\Exception $e) {
-            Log::error('Image upload error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            Log::error('Image upload error: ' . $e->getMessage()); // Log error on catch
             return response()->json(['message' => 'Image upload failed. Please try again.'], 400);
         }
     }
+    
 
     public function update(Request $request, $id)
     {
@@ -95,7 +98,7 @@ class ProductController extends Controller
             'discount_price' => 'nullable|numeric',
             'quantity' => 'required|integer',
             'description' => 'nullable|string',
-            'image' => 'required|image|max:2048',
+            'image' => 'nullable|image|max:2048',
             'category_id' => 'required|exists:categories,id',
         ]);
 
@@ -109,14 +112,14 @@ class ProductController extends Controller
 
         if ($request->hasFile('image')) {
             try {
-                $imagePath = Storage::disk('tigris')->putFile('product_images', $request->file('image'));
+                $imagePath = Storage::disk('cloudinary')->putFile('product_images', $request->file('image'));
 
                 if ($product->image) {
-                    Storage::disk('tigris')->delete($product->image);
+                    Storage::disk('cloudinary')->delete($product->image);
                 }
 
                 $productData['image'] = $imagePath;
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Log::error('Image upload error: ' . $e->getMessage());
                 return response()->json(['message' => 'Image upload failed. Please try again.'], 400);
             }
@@ -133,12 +136,12 @@ class ProductController extends Controller
         $product = $user->products()->findOrFail($id);
 
         if ($product->image) {
-            Storage::delete($product->image);
+            Storage::disk('cloudinary')->delete($product->image);
         }
 
         $product->delete();
 
         return response()->json(['message' => 'Product deleted successfully'], 200);
     }
-
 }
+
