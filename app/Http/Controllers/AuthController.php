@@ -53,14 +53,12 @@ class AuthController extends Controller
             'unique_identifier' => Str::random(5),
         ]);
 
-        $whatsappChatLink = $this->generateWhatsAppChatLink($user);
         $token = $user->createToken('auth_token')->accessToken;
 
         return response()->json([
             'message' => 'Registration successful!',
             'user' => $user,
             'token' => $token,
-            'uniqueLink' => $whatsappChatLink,
         ], 201);
     }
 
@@ -120,15 +118,5 @@ class AuthController extends Controller
         ], 200);
     }
 
-    private function generateWhatsAppChatLink(User $user)
-    {
-        $queryParams = http_build_query([
-            '0' => $user->unique_identifier,
-        ]);
-
-        $whatsappNumber = '2348103982074';
-        $whatsappChatLink = 'https://wa.me/' . $whatsappNumber . '?' . $queryParams;
-
-        return $whatsappChatLink;
-    }
+    
 }

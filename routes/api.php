@@ -25,20 +25,19 @@ Route::group(['prefix' => '/oauth'], function () {
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/admin/login', [AuthController::class, 'adminLogin']); 
-Route::get('/chat/init/{uniqueIdentifier}', [ChatController::class, 'initiateChat'])->name('chat.init');
-Route::post('/chat/webhook/{uniqueIdentifier}', [ChatController::class, 'handleWebhook'])->name('chat.webhook');
 
 
+Route::post('/business-info', [ProductController::class, 'getBusinessProducts']);
 
 // Routes requiring API authentication
 Route::middleware('auth:api')->group(function () {
     Route::get('/products', [ProductController::class, 'showProducts']);
-    Route::get('/products', [ProductController::class, 'index']);
+    // Route::get('/products', [ProductController::class, 'index']);
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
     Route::get('/categories', [ProductController::class, 'create']);
-    Route::post('/authenticate', [ZikorController::class, 'authenticate']);
+    
 });
 
 

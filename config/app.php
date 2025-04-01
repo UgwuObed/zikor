@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
+use OpenAI\Client;
 
 return [
 
@@ -156,7 +157,7 @@ return [
     */
 
     'providers' => ServiceProvider::defaultProviders()->merge([
-
+        App\Providers\AppServiceProvider::class,
         Laravel\Passport\PassportServiceProvider::class,
         /*
          * Package Service Providers...
@@ -185,6 +186,9 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
+        // 'OpenAI' => OpenAI\Laravel\Facades\OpenAI::class,
+        // 'OpenAI' => OpenAI\Laravel\Facades\OpenAI::class,
+        // 'Client' => OpenAI\Client::class,
     ])->toArray(),
 
 ];
