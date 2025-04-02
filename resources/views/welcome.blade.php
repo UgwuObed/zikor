@@ -1,6 +1,7 @@
-<form action="/api/interact-with-ai" method="POST">
+<form action="/api/login" method="POST">
     @csrf
-    <input type="text" name="user_input" placeholder="Type your message here...">
+    <input type="text" name="email" placeholder="Type your email>
+    <input type="text" name="password" placeholder="Type your password>
     <button type="submit">Send</button>
 </form>
 

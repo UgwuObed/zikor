@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ZikorController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\StorefrontController;
 use Laravel\Passport\Http\Controllers\AccessTokenController;
 use Laravel\Passport\Http\Controllers\AuthorizationController;
 use App\Http\Middleware\AdminAuthorization;
@@ -26,7 +27,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/admin/login', [AuthController::class, 'adminLogin']); 
 
-
+Route::get('/store/{slug}', [StorefrontController::class, 'getBySlug']);
 Route::post('/business-info', [ProductController::class, 'getBusinessProducts']);
 
 // Routes requiring API authentication
@@ -37,6 +38,14 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
     Route::get('/categories', [ProductController::class, 'create']);
+    Route::get('/business/name', [ProductController::class, 'getBusinessName']);
+
+
+    //store front
+    Route::get('/storefront', [StorefrontController::class, 'index']);
+    Route::post('/storefront/create', [StorefrontController::class, 'store']);
+    Route::put('/storefront/update', [StorefrontController::class, 'update']);
+    Route::post('/storefront/check-slug', [StorefrontController::class, 'checkSlugAvailability']);
     
 });
 

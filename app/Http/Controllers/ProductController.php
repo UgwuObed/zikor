@@ -232,4 +232,22 @@ class ProductController extends Controller
 
         return response()->json(['message' => $aiResponse]);
     }
+
+    public function getBusinessName()
+    {
+        $user = auth()->user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
+        
+        $businessName = $user->business_name;
+        
+        return response()->json([
+            'message' => 'Successfully retrieved business name',
+            'business' => [
+                'name' => $businessName ?? ''
+            ]
+        ], 200);
+    }
 }
