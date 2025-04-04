@@ -35,7 +35,10 @@ class AuthController extends Controller
                 $formattedErrors[$field] = $messages[0]; 
             }
 
-            return response()->json($formattedErrors, 422);
+            return response()->json([
+                'message' => 'Registration failed!',
+                'data' => $formattedErrors
+            ], 422);
         }
 
         $user = User::create([

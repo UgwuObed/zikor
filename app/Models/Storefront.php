@@ -25,14 +25,14 @@ class Storefront extends Model
         'color_theme',
         'business_hours',
         'address',
-        'payment_methods',
+        'bank_details',
         'is_active',
     ];
 
     protected $casts = [
         'social_links' => 'array',
         'business_hours' => 'array',
-        'payment_methods' => 'array',
+        'bank_details' => 'array',
         'is_active' => 'boolean',
     ];
 

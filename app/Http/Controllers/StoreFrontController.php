@@ -46,7 +46,11 @@ class StorefrontController extends Controller
             'color_theme' => 'nullable|string|max:50',
             'business_hours' => 'nullable|array',
             'address' => 'nullable|string',
-            'payment_methods' => 'nullable|array',
+            'bank_details' => 'nullable|array',
+            'bank_details.bank_name' => 'nullable|string|max:255',
+            'bank_details.account_name' => 'nullable|string|max:255',
+            'bank_details.account_number' => 'nullable|string|max:20',
+
         ]);
 
         if ($validator->fails()) {
@@ -56,7 +60,6 @@ class StorefrontController extends Controller
         try {
             $user = auth()->user();
             
-            // Check if user already has a storefront
             if ($user->storefront) {
                 return response()->json([
                     'message' => 'User already has a storefront',
@@ -66,12 +69,10 @@ class StorefrontController extends Controller
             
             $storefrontData = $request->except(['logo', 'banner']);
             
-            // Generate slug if not provided
             if (empty($storefrontData['slug'])) {
                 $storefrontData['slug'] = Storefront::generateUniqueSlug($request->business_name);
             }
             
-            // Handle file uploads
             if ($request->hasFile('logo')) {
                 $logoPath = cloudinary()->upload($request->file('logo')->getRealPath(), [
                     'folder' => 'storefront_logos',
@@ -86,13 +87,11 @@ class StorefrontController extends Controller
                 $storefrontData['banner'] = $bannerPath;
             }
 
-            // Add user ID to data
             $storefrontData['user_id'] = $user->id;
             
-            // Create storefront
+      
             $storefront = Storefront::create($storefrontData);
             
-            // Update user's business name if not already set
             if (empty($user->business_name)) {
                 $user->business_name = $request->business_name;
                 $user->save();
@@ -127,7 +126,10 @@ class StorefrontController extends Controller
             'color_theme' => 'nullable|string|max:50',
             'business_hours' => 'nullable|array',
             'address' => 'nullable|string',
-            'payment_methods' => 'nullable|array',
+            'bank_details' => 'nullable|array',
+            'bank_details.bank_name' => 'nullable|string|max:255',
+            'bank_details.account_name' => 'nullable|string|max:255',
+            'bank_details.account_number' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -159,10 +161,10 @@ class StorefrontController extends Controller
                 $storefrontData['banner'] = $bannerPath;
             }
             
-            // Update storefront
+        
             $storefront->update($storefrontData);
             
-            // Update user's business name if changed
+           
             if (isset($storefrontData['business_name']) && $user->business_name !== $storefrontData['business_name']) {
                 $user->business_name = $storefrontData['business_name'];
                 $user->save();
