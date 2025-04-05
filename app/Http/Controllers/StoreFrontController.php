@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Exception;
 
-class StorefrontController extends Controller
+class StoreFrontController extends Controller
 {
     public function index()
     {
