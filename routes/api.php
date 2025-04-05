@@ -43,8 +43,8 @@ Route::middleware('auth:api')->group(function () {
 
     //store front
     Route::get('/storefront', [StorefrontController::class, 'index']);
-    Route::post('/storefront/create', [StorefrontController::class, 'store']);
-    Route::put('/storefront/update', [StorefrontController::class, 'update']);
+    Route::post('/storefront', [StorefrontController::class, 'store']);
+    Route::put('/storefront', [StorefrontController::class, 'update']);
     Route::post('/storefront/check-slug', [StorefrontController::class, 'checkSlugAvailability']);
     
 });

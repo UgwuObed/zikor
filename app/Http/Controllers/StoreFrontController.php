@@ -42,11 +42,11 @@ class StorefrontController extends Controller
             'description' => 'nullable|string',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'social_links' => 'nullable|array',
+            'social_links' => 'nullable',
             'color_theme' => 'nullable|string|max:50',
-            'business_hours' => 'nullable|array',
+            'business_hours' => 'nullable',
             'address' => 'nullable|string',
-            'bank_details' => 'nullable|array',
+            'bank_details' => 'nullable',
             'bank_details.bank_name' => 'nullable|string|max:255',
             'bank_details.account_name' => 'nullable|string|max:255',
             'bank_details.account_number' => 'nullable|string|max:20',
@@ -98,12 +98,14 @@ class StorefrontController extends Controller
             }
 
             return response()->json([
+                'success' => true,
                 'message' => 'Storefront created successfully',
                 'storefront' => $storefront
             ], 201);
         } catch (Exception $e) {
             Log::error('Storefront creation error: ' . $e->getMessage());
             return response()->json([
+                'failed' => true,
                 'message' => 'Failed to create storefront',
                 'error' => $e->getMessage()
             ], 500);
@@ -122,11 +124,11 @@ class StorefrontController extends Controller
             'description' => 'nullable|string',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'social_links' => 'nullable|array',
+            'social_links' => 'nullable',
             'color_theme' => 'nullable|string|max:50',
-            'business_hours' => 'nullable|array',
+            'business_hours' => 'nullable',
             'address' => 'nullable|string',
-            'bank_details' => 'nullable|array',
+            'bank_details' => 'nullable',
             'bank_details.bank_name' => 'nullable|string|max:255',
             'bank_details.account_name' => 'nullable|string|max:255',
             'bank_details.account_number' => 'nullable|string|max:20',
@@ -171,12 +173,14 @@ class StorefrontController extends Controller
             }
 
             return response()->json([
+                'success' => true,
                 'message' => 'Storefront updated successfully',
                 'storefront' => $storefront
             ], 200);
         } catch (Exception $e) {
             Log::error('Storefront update error: ' . $e->getMessage());
             return response()->json([
+                'failed' => true,
                 'message' => 'Failed to update storefront',
                 'error' => $e->getMessage()
             ], 500);
