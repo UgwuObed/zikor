@@ -47,7 +47,7 @@ class PaymentController extends Controller
     
 
     $frontendUrl = env('FRONTEND_URL', config('app.url'));
-    $callbackUrl = rtrim($frontendUrl, '/') . '/payment/verify/' . $reference;
+    $callbackUrl = env('FRONTEND_URL', 'https://zikor.shop') . '/payment/verify/' . $reference;
     
     $response = Http::withHeaders([
         'Authorization' => 'Bearer ' . $this->paystackSecretKey,
