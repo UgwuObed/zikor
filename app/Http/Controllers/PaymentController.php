@@ -23,81 +23,81 @@ class PaymentController extends Controller
      * Initialize payment
      */
     public function initializePayment(Request $request)
-    {
-        $request->validate([
-            'plan_id' => 'required|exists:plans,id',
-            'billing_cycle' => 'required|in:monthly,yearly',
-            'email' => 'required|email',
+{
+    $request->validate([
+        'plan_id' => 'required|exists:plans,id',
+        'billing_cycle' => 'required|in:monthly,yearly',
+        'email' => 'required|email',
+    ]);
+    
+    $user = $request->user();
+    $plan = Plan::findOrFail($request->plan_id);
+    
+    if ($plan->is_free) {
+        $this->createSubscription($user, $plan, 'free', $request->billing_cycle);
+        return response()->json([
+            'message' => 'Free plan activated successfully',
+            'redirect_url' => '/store/storefront'
         ]);
-        
-        $user = $request->user();
-        $plan = Plan::findOrFail($request->plan_id);
-        
-   
-        if ($plan->is_free) {
-            $this->createSubscription($user, $plan, 'free', $request->billing_cycle);
-            return response()->json([
-                'message' => 'Free plan activated successfully',
-                'redirect_url' => '/store/storefront'
-            ]);
-        }
-        
-        $amount = $request->billing_cycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
-        
-      
-        $amountInKobo = $amount * 100;
-        
-        $reference = 'zik_' . uniqid(); 
-        
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->paystackSecretKey,
-            'Content-Type' => 'application/json',
-        ])->post('https://api.paystack.co/transaction/initialize', [
-            'email' => $user->email,
-            'amount' => $amountInKobo,
-            'reference' => $reference,
-            'callback_url' => config('app.url') . '/payment/verify/' . $reference,
-            'metadata' => [
-                'user_id' => $user->id,
-                'plan_id' => $plan->id,
-                'billing_cycle' => $request->billing_cycle,
-                'custom_fields' => [
-                    [
-                        'display_name' => "Plan Name",
-                        'variable_name' => "plan_name",
-                        'value' => $plan->name
-                    ],
-                    [
-                        'display_name' => "Billing Cycle",
-                        'variable_name' => "billing_cycle",
-                        'value' => $request->billing_cycle
-                    ]
+    }
+    
+    $amount = $request->billing_cycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
+    $amountInKobo = $amount * 100;
+    $reference = 'zik_' . uniqid();
+    
+
+    $frontendUrl = env('FRONTEND_URL', config('app.url'));
+    $callbackUrl = rtrim($frontendUrl, '/') . '/payment/verify/' . $reference;
+    
+    $response = Http::withHeaders([
+        'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+        'Content-Type' => 'application/json',
+    ])->post('https://api.paystack.co/transaction/initialize', [
+        'email' => $user->email,
+        'amount' => $amountInKobo,
+        'reference' => $reference,
+        'callback_url' => $callbackUrl,  
+        'metadata' => [
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'billing_cycle' => $request->billing_cycle,
+            'custom_fields' => [
+                [
+                    'display_name' => "Plan Name",
+                    'variable_name' => "plan_name",
+                    'value' => $plan->name
+                ],
+                [
+                    'display_name' => "Billing Cycle",
+                    'variable_name' => "billing_cycle",
+                    'value' => $request->billing_cycle
                 ]
             ]
-        ]);
-        
-     
-        PendingPayment::create([
-            'user_id' => auth()->id(),
-            'plan_id' => $request->plan_id,
-            'billing_cycle' => $request->billing_cycle,
-            'reference' => $reference,
-            'status' => 'pending',
-        ]);
+        ]
+    ]);
+    
+    PendingPayment::create([
+        'user_id' => auth()->id(),
+        'plan_id' => $request->plan_id,
+        'billing_cycle' => $request->billing_cycle,
+        'reference' => $reference,
+        'status' => 'pending',
+    ]);
 
-        if ($response->successful()) {
-            return response()->json([
-                'authorization_url' => $response->json()['data']['authorization_url'],
-                'access_code' => $response->json()['data']['access_code'],
-                'reference' => $response->json()['data']['reference']
-            ]);
-        }
-        
+    if ($response->successful()) {
         return response()->json([
-            'message' => 'Failed to initialize payment',
-            'error' => $response->json()
-        ], 400);
+            'authorization_url' => $response->json()['data']['authorization_url'],
+            'access_code' => $response->json()['data']['access_code'],
+            'reference' => $response->json()['data']['reference'],
+            'callback_url' => $callbackUrl  
+        ]);
     }
+    
+    return response()->json([
+        'message' => 'Failed to initialize payment',
+        'error' => $response->json()
+    ], 400);
+}
     
     /**
      * Verify payment and create subscription
