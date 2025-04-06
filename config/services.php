@@ -33,5 +33,10 @@ return [
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
     ],
+    
+    'paystack' => [
+    'secret_key' => env('PAYSTACK_SECRET_KEY'),
+    'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+],
 
 ];
