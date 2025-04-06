@@ -16,12 +16,12 @@ class CheckSubscription
             return $next($request);
         }
         
-        // Skip for admin users
+
         if ($user->is_admin) {
             return $next($request);
         }
         
-        // Check if user has an active subscription
+
         $activeSubscription = $user->subscriptions()
             ->where('status', 'active')
             ->where('end_date', '>=', now())
