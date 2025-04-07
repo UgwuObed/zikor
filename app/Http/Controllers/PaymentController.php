@@ -46,8 +46,8 @@ class PaymentController extends Controller
     $reference = 'zik_' . uniqid();
     
 
-    $frontendUrl = env('FRONTEND_URL', config('app.url'));
-    $callbackUrl = env('FRONTEND_URL', 'https://zikor.shop') . '/payment/verify/' . $reference;
+    $frontendUrl = env('FRONTEND_URL', 'https://zikor.shop');
+    $callbackUrl = $frontendUrl . '/plan/verify';
     
     $response = Http::withHeaders([
         'Authorization' => 'Bearer ' . $this->paystackSecretKey,
