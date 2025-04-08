@@ -165,7 +165,7 @@ class PaymentController extends Controller
             $pendingPayment->save();
     
         
-            return redirect()->to($frontendUrl . '/plan/verify?payment=success');
+            return redirect()->to($frontendUrl . '/plan/payment?payment=success');
     
         } catch (\Exception $e) {
             return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Error: ' . $e->getMessage()));
