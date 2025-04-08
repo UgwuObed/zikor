@@ -2,376 +2,492 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
+use App\Models\PendingPayment;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Unicodeveloper\Paystack\Facades\Paystack;
+use Illuminate\Support\Facades\Http;
 
 class PaymentController extends Controller
 {
+    protected $paystackSecretKey;
+    
+    public function __construct()
+    {
+        $this->paystackSecretKey = config('services.paystack.secret_key');
+    }
+    
     /**
-     * Initialize a payment transaction
+     * Initialize payment
      */
+
     public function initializePayment(Request $request)
     {
-        // Validate request
-        $validator = Validator::make($request->all(), [
-            'plan_id' => 'required|integer|exists:plans,id',
-            'email' => 'required|email',
+        $request->validate([
+            'plan_id' => 'required|exists:plans,id',
             'billing_cycle' => 'required|in:monthly,yearly',
+            'email' => 'required|email',
         ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['error' => 'User not authenticated'], 401);
-        }
-
- 
+        
+        $user = $request->user();
         $plan = Plan::findOrFail($request->plan_id);
-
-        // If free plan, create subscription without payment
+        
         if ($plan->is_free) {
-            $subscription = $this->createSubscription($user->id, $plan->id, 'active', $request->billing_cycle);
-            
+            $this->createSubscription($user, $plan, 'free', $request->billing_cycle);
             return response()->json([
                 'message' => 'Free plan activated successfully',
-                'subscription' => $subscription
-            ], 200);
+                'redirect_url' => '/store/storefront'
+            ]);
         }
-
-        // Calculate the amount based on billing cycle
-        $amount = $request->billing_cycle === 'monthly' 
-            ? $plan->monthly_price * 100 
-            : $plan->yearly_price * 100;
-
-        // Generate a unique reference
-        $reference = 'PS_' . uniqid() . '_' . time();
-
-        // Prepare callback URL
-        $callbackUrl = url('/api/payment/verify');
-
-        // Prepare metadata
-        $metadata = [
-            'user_id' => $user->id,
-            'plan_id' => $plan->id,
-            'billing_cycle' => $request->billing_cycle,
-            'custom_fields' => [
-                [
-                    'display_name' => 'Plan Name',
-                    'variable_name' => 'plan_name',
-                    'value' => $plan->name
-                ],
-                [
-                    'display_name' => 'Billing Cycle',
-                    'variable_name' => 'billing_cycle',
-                    'value' => ucfirst($request->billing_cycle)
+        
+        $amount = $request->billing_cycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
+        $amountInKobo = $amount * 100;
+        $reference = 'zik_' . uniqid();
+        
+        // Generate a signed callback URL to ensure security
+        $callbackUrl = route('payment.callback');
+        
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+            'Content-Type' => 'application/json',
+        ])->post('https://api.paystack.co/transaction/initialize', [
+            'email' => $user->email,
+            'amount' => $amountInKobo,
+            'reference' => $reference,
+            'callback_url' => $callbackUrl,
+            'metadata' => [
+                'user_id' => $user->id,
+                'plan_id' => $plan->id,
+                'billing_cycle' => $request->billing_cycle,
+                'custom_fields' => [
+                    [
+                        'display_name' => "Plan Name",
+                        'variable_name' => "plan_name",
+                        'value' => $plan->name
+                    ],
+                    [
+                        'display_name' => "Billing Cycle",
+                        'variable_name' => "billing_cycle",
+                        'value' => $request->billing_cycle
+                    ]
                 ]
             ]
-        ];
-
-        // Initialize Paystack transaction
-        try {
-            $response = Paystack::getAuthorizationUrl([
-                'amount' => $amount,
-                'email' => $request->email,
-                'reference' => $reference,
-                'callback_url' => $callbackUrl,
-                'metadata' => json_encode($metadata),
-                'currency' => 'NGN',
+        ]);
+        
+        if (!$response->successful()) {
+            Log::error('Failed to initialize Paystack payment', [
+                'user_id' => $user->id,
+                'plan_id' => $plan->id,
+                'response' => $response->json()
             ]);
-
-            // Store the reference for verification
-            session(['paystack_reference' => $reference]);
-
+            
             return response()->json([
-                'authorization_url' => $response,
-                'reference' => $reference
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Paystack error: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Unable to initialize payment',
-                'message' => $e->getMessage()
-            ], 500);
+                'message' => 'Failed to initialize payment',
+                'error' => $response->json()
+            ], 400);
         }
+        
+        PendingPayment::create([
+            'user_id' => $user->id,
+            'plan_id' => $request->plan_id,
+            'billing_cycle' => $request->billing_cycle,
+            'reference' => $reference,
+            'status' => 'pending',
+        ]);
+    
+        return response()->json([
+            'authorization_url' => $response->json()['data']['authorization_url'],
+            'access_code' => $response->json()['data']['access_code'],
+            'reference' => $response->json()['data']['reference'],
+        ]);
+    }
+    
+    /**
+     * Handle callback from Paystack and automatically verify payment
+     */
+    public function handlePaymentCallback(Request $request)
+{
+    $reference = $request->reference;
+    $frontendUrl = config('app.frontend_url', 'https://zikor.shop');
+    
+    if (!$reference) {
+        return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('No reference provided'));
     }
 
-    /**
-     * Verify payment callback
-     */
-   /**
- * Verify payment callback
- */
-public function verifyPayment(Request $request)
-{
-    // Get the reference from the URL
-    $reference = $request->query('reference');
-    if (!$reference) {
-        return response()->json(['error' => 'Reference not found'], 400);
+    // Find pending payment without requiring auth
+    $pendingPayment = PendingPayment::where('reference', $reference)->first();
+    
+    if (!$pendingPayment) {
+        return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Invalid payment reference'));
+    }
+
+    // Verify payment with Paystack
+    $response = Http::withHeaders([
+        'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+        'Content-Type' => 'application/json',
+    ])->get('https://api.paystack.co/transaction/verify/' . $reference);
+    
+    if (!$response->successful()) {
+        return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Payment verification failed'));
+    }
+    
+    $data = $response->json()['data'];
+    
+    if ($data['status'] !== 'success') {
+        $pendingPayment->status = 'failed';
+        $pendingPayment->save();
+        return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Payment failed'));
+    }
+
+    // Get user from pending payment (no auth needed)
+    $user = User::find($pendingPayment->user_id);
+    $plan = Plan::find($pendingPayment->plan_id);
+
+    if (!$user || !$plan) {
+        return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Invalid user or plan'));
     }
 
     try {
-        $paystack = new \Unicodeveloper\Paystack\Paystack();
-        $transaction = $paystack->getPaymentData($reference);
-
-        if ($transaction['status'] === true && $transaction['data']['status'] === 'success') {
-            // Extract metadata
-            $metadata = $transaction['data']['metadata'];
-            $userId = $metadata['user_id'];
-            $planId = $metadata['plan_id'];
-            $billingCycle = $metadata['billing_cycle'];
-
-            // Create a subscription record
-            $subscription = $this->createSubscription($userId, $planId, 'active', $billingCycle);
-
-            // Generate access token for front-end redirect
-            $user = User::find($userId);
-            $token = $user->createToken('auth_token')->accessToken;
-
-            // Change this to redirect to your frontend URL instead of a Laravel route
-            $frontendUrl = "https://zikor.shop/plan/verify";
-            $successUrl = $frontendUrl . "?payment=success&token=" . $token;
-            
-            return redirect($successUrl);
-        } else {
-            $errorMessage = urlencode('Payment was not successful');
-            // Change this to redirect to your frontend URL instead of a Laravel route
-            $frontendUrl = "https://zikor.shop/plan/verify";
-            $errorUrl = $frontendUrl . "?payment=failed&message=" . $errorMessage;
-            
-            return redirect($errorUrl);
-        }
-    } catch (\Exception $e) {
-        Log::error('Paystack verification error: ' . $e->getMessage());
-        $errorMessage = urlencode('An error occurred while verifying your payment');
-        // Change this to redirect to your frontend URL instead of a Laravel route
-        $frontendUrl = "https://zikor.shop/plan/verify";
-        $errorUrl = $frontendUrl . "?payment=failed&message=" . $errorMessage;
+        // Create subscription
+        $this->createSubscription(
+            $user, 
+            $plan, 
+            'paystack', 
+            $pendingPayment->billing_cycle, 
+            [
+                'customer_code' => $data['customer']['customer_code'] ?? null,
+                'authorization_code' => $data['authorization']['authorization_code'] ?? null
+            ]
+        );
         
-        return redirect($errorUrl);
+        $pendingPayment->status = 'completed';
+        $pendingPayment->save();
+
+
+        return redirect()->to($frontendUrl . '/plan/verify?payment=success');
+
+    } catch (\Exception $e) {
+        return redirect()->to($frontendUrl . '/plan/verify?payment=failed');
     }
 }
-    /**
-     * Create a subscription record
-     */
-    private function createSubscription($userId, $planId, $status, $billingCycle)
-    {
-        $startDate = Carbon::now();
-        $endDate = $billingCycle === 'monthly' 
-            ? Carbon::now()->addMonth() 
-            : Carbon::now()->addYear();
 
-        return Subscription::create([
-            'user_id' => $userId,
-            'plan_id' => $planId,
-            'status' => $status,
-            'billing_cycle' => $billingCycle,
+    /**
+     * Create subscription record
+     */
+    protected function createSubscription($user, $plan, $paymentMethod, $billingCycle, $paystackData = [])
+    {
+        $startDate = now();
+        $endDate = $billingCycle === 'yearly' ? now()->addYear() : now()->addMonth();
+        
+        // Deactivate any active subscriptions
+        Subscription::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->update(['status' => 'inactive']);
+        
+        $subscription = Subscription::create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'paystack_subscription_code' => $paystackData['subscription_code'] ?? null,
+            'paystack_customer_code' => $paystackData['customer_code'] ?? null,
+            'authorization_code' => $paystackData['authorization_code'] ?? null,
+            'status' => 'active',
             'start_date' => $startDate,
             'end_date' => $endDate,
-            'next_billing_date' => $endDate,
+            'next_payment_date' => $billingCycle === 'yearly' ? $endDate : null,
+            'billing_cycle' => $billingCycle,
+            'payment_method' => $paymentMethod,
+            'amount' => $billingCycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price,
         ]);
+        
+        // Update user's plan
+        $user->current_plan_id = $plan->id;
+        $user->save();
+        
+        return $subscription;
     }
-
+    
+    
     /**
-     * Get user subscription status
+     * Verify Paystack webhook signature
      */
-    public function getSubscription(Request $request)
+    protected function verifyPaystackWebhook($signature, $payload)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['error' => 'User not authenticated'], 401);
+        $computedSignature = hash_hmac('sha512', json_encode($payload), $this->paystackSecretKey);
+        return hash_equals($signature, $computedSignature);
+    }
+    
+    /**
+     * Handle successful charge for recurring payment
+     */
+    protected function handleChargeSuccess($payload)
+    {
+        $data = $payload['data'];
+        $subscriptionCode = $data['subscription']['subscription_code'] ?? null;
+        
+        if (!$subscriptionCode) {
+            return response()->json(['status' => 'error', 'message' => 'No subscription code'], 400);
         }
-
-        $subscription = $user->activeSubscription();
+        
+        $subscription = Subscription::where('paystack_subscription_code', $subscriptionCode)->first();
+        
+        if (!$subscription) {
+            Log::error('Subscription not found for successful charge', ['subscription_code' => $subscriptionCode]);
+            return response()->json(['status' => 'error', 'message' => 'Subscription not found'], 404);
+        }
+        
+        // Update subscription dates
+        $billingCycle = $subscription->billing_cycle;
+        $newEndDate = $billingCycle === 'yearly' ? now()->addYear() : now()->addMonth();
+        
+        $subscription->update([
+            'end_date' => $newEndDate,
+            'next_payment_date' => $newEndDate,
+            'last_payment_date' => now(),
+            'status' => 'active',
+        ]);
+        
+        Log::info('Subscription renewed successfully', [
+            'subscription_id' => $subscription->id,
+            'user_id' => $subscription->user_id,
+            'plan_id' => $subscription->plan_id
+        ]);
+        
+        return response()->json(['status' => 'success']);
+    }
+    
+    /**
+     * Handle new subscription creation via webhook
+     */
+    protected function handleSubscriptionCreated($payload)
+    {
+        $data = $payload['data'];
+        $userEmail = $data['customer']['email'];
+        $subscriptionCode = $data['subscription_code'];
+        
+        $user = User::where('email', $userEmail)->first();
+        
+        if (!$user) {
+            Log::error('User not found for subscription creation', ['email' => $userEmail]);
+            return response()->json(['status' => 'error', 'message' => 'User not found'], 404);
+        }
+        
+        // Update the user's subscription with the subscription code
+        Subscription::where('user_id', $user->id)
+            ->whereNull('paystack_subscription_code')
+            ->update(['paystack_subscription_code' => $subscriptionCode]);
+        
+        return response()->json(['status' => 'success']);
+    }
+    
+    /**
+     * Handle subscription disabled event
+     */
+    protected function handleSubscriptionDisabled($payload)
+    {
+        $data = $payload['data'];
+        $subscriptionCode = $data['subscription_code'];
+        
+        $subscription = Subscription::where('paystack_subscription_code', $subscriptionCode)->first();
+        
+        if ($subscription) {
+            $subscription->update([
+                'status' => 'inactive',
+                'cancelled_at' => now(),
+            ]);
+            
+            Log::info('Subscription disabled via webhook', [
+                'subscription_id' => $subscription->id,
+                'user_id' => $subscription->user_id
+            ]);
+        }
+        
+        return response()->json(['status' => 'success']);
+    }
+    
+    /**
+     * Get current user's subscription
+     */
+    public function getCurrentSubscription(Request $request)
+    {
+        $user = $request->user();
+        $subscription = Subscription::with('plan')
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->first();
+            
+        if (!$subscription) {
+            return response()->json([
+                'message' => 'No active subscription found',
+                'has_subscription' => false
+            ]);
+        }
         
         return response()->json([
-            'has_subscription' => !is_null($subscription),
-            'subscription' => $subscription ? [
-                'plan' => $subscription->plan->name,
-                'status' => $subscription->status,
-                'billing_cycle' => $subscription->billing_cycle,
-                'start_date' => $subscription->start_date->format('Y-m-d'),
-                'end_date' => $subscription->end_date->format('Y-m-d'),
-                'days_remaining' => $subscription->end_date->diffInDays(Carbon::now()),
-            ] : null
+            'has_subscription' => true,
+            'subscription' => $subscription,
+            'plan' => $subscription->plan,
+            'days_remaining' => now()->diffInDays($subscription->end_date, false)
+        ]);
+    }
+    
+    /**
+     * Cancel subscription
+     */
+    public function cancelSubscription(Request $request)
+    {
+        $user = $request->user();
+        $subscription = Subscription::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->first();
+            
+        if (!$subscription) {
+            return response()->json(['message' => 'No active subscription found'], 404);
+        }
+        
+        // If it's a Paystack subscription, disable it via API
+        if ($subscription->paystack_subscription_code) {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+                'Content-Type' => 'application/json',
+            ])->post('https://api.paystack.co/subscription/disable', [
+                'code' => $subscription->paystack_subscription_code,
+                'token' => $subscription->authorization_code
+            ]);
+            
+            if (!$response->successful()) {
+                Log::error('Failed to cancel Paystack subscription', [
+                    'user_id' => $user->id,
+                    'response' => $response->json()
+                ]);
+                
+                return response()->json([
+                    'message' => 'Failed to cancel subscription with payment processor',
+                    'error' => $response->json()
+                ], 400);
+            }
+        }
+        
+        $subscription->update([
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+        ]);
+        
+        return response()->json(['message' => 'Subscription cancelled successfully']);
+    }
+    
+    /**
+     * Verify payment status
+     */
+    public function verifyPayment(Request $request)
+    {
+        $request->validate([
+            'reference' => 'required'
+        ]);
+        
+        $pendingPayment = PendingPayment::where('reference', $request->reference)->first();
+        
+        if (!$pendingPayment) {
+            return response()->json(['message' => 'Payment reference not found'], 404);
+        }
+        
+        return response()->json([
+            'status' => $pendingPayment->status,
+            'payment' => $pendingPayment
         ]);
     }
 
+
+    /**
+     * Create Paystack subscription for recurring payments
+     */
+    protected function createPaystackSubscription($user, $plan, $subscription, $authorizationCode)
+    {
+ 
+        $paystackPlanId = $plan->paystack_plan_id;
+        
+        if (!$paystackPlanId) {
+            $planResponse = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+                'Content-Type' => 'application/json',
+            ])->post('https://api.paystack.co/plan', [
+                'name' => $plan->name . ' (Yearly)',
+                'amount' => $plan->yearly_price * 100,
+                'interval' => 'yearly',
+                'description' => $plan->description,
+            ]);
+            
+            if ($planResponse->successful()) {
+                $paystackPlanId = $planResponse->json()['data']['plan_code'];
+                $plan->update(['paystack_plan_id' => $paystackPlanId]);
+            }
+        }
+        
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+            'Content-Type' => 'application/json',
+        ])->post('https://api.paystack.co/subscription', [
+            'customer' => $user->email,
+            'plan' => $paystackPlanId,
+            'authorization' => $authorizationCode,
+        ]);
+        
+        if ($response->successful()) {
+            $subscription->update([
+                'paystack_subscription_code' => $response->json()['data']['subscription_code'],
+                'next_payment_date' => $response->json()['data']['next_payment_date'],
+            ]);
+        }
+    }
+    
     /**
      * Handle Paystack webhook
      */
     public function handleWebhook(Request $request)
     {
-        $payload = $request->getContent();
+        $payload = $request->all();
         $signature = $request->header('x-paystack-signature');
         
-        if (!$this->verifySignature($payload, $signature)) {
-            return response()->json(['error' => 'Invalid signature'], 401);
+        if (!$this->verifyPaystackWebhook($signature, $payload)) {
+            Log::error('Invalid Paystack webhook signature');
+            return response()->json(['status' => 'error'], 403);
         }
-
-        $event = json_decode($payload, true);
         
-        switch ($event['event']) {
+        $event = $payload['event'];
+        
+        switch ($event) {
             case 'charge.success':
-                $this->handleChargeSuccess($event['data']);
-                break;
+                return $this->handleChargeSuccess($payload);
             case 'subscription.create':
-                $this->handleSubscriptionCreated($event['data']);
-                break;
+                return $this->handleSubscriptionCreated($payload);
             case 'subscription.disable':
-                $this->handleSubscriptionDisabled($event['data']);
-                break;
+                return $this->handleSubscriptionDisabled($payload);
+            case 'invoice.create':
+                return $this->handleInvoiceCreated($payload);
+            case 'invoice.update':
+                return $this->handleInvoiceUpdated($payload);
         }
-
+        
         return response()->json(['status' => 'success']);
     }
 
-    /**
-     * Verify webhook signature
-     */
-    private function verifySignature($payload, $signature)
+    protected function handleSuccessfulCharge($data)
     {
-        $secret = config('paystack.secretKey');
         
-        $hash = hash_hmac('sha512', $payload, $secret);
+        $subscriptionCode = $data['subscription']['subscription_code'] ?? null;
         
-        return hash_equals($hash, $signature);
-    }
-
-    /**
-     * Handle charge.success event
-     */
-    private function handleChargeSuccess($data)
-    {
-    
-        if (isset($data['metadata']['user_id']) && isset($data['metadata']['plan_id'])) {
-            $userId = $data['metadata']['user_id'];
-            $planId = $data['metadata']['plan_id'];
-            $billingCycle = $data['metadata']['billing_cycle'] ?? 'monthly';
-            
-       
-            Log::info('Charge success for user ' . $userId . ' on plan ' . $planId);
-            
- 
-            $subscription = Subscription::where('user_id', $userId)
-                ->where('plan_id', $planId)
-                ->where('status', 'active')
-                ->first();
-            
-            if (!$subscription) {
-       
-                $this->createSubscription($userId, $planId, 'active', $billingCycle);
-            }
-        }
-    }
-
-    /**
-     * Handle subscription.create event
-     */
-    private function handleSubscriptionCreated($data)
-    {
-        // Extract customer and subscription details
-        if (isset($data['customer']) && isset($data['subscription_code'])) {
-            $email = $data['customer']['email'];
-            $subscriptionCode = $data['subscription_code'];
-            
-            // Find user by email
-            $user = User::where('email', $email)->first();
-            
-            if ($user) {
-                // Update subscription with Paystack details
-                $subscription = $user->activeSubscription();
-                
-                if ($subscription) {
-                    $subscription->update([
-                        'paystack_subscription_code' => $subscriptionCode,
-                        'status' => 'active',
-                    ]);
-                    
-                    Log::info('Updated subscription for user ' . $user->id . ' with code ' . $subscriptionCode);
-                }
-            }
-        }
-    }
-
-    /**
-     * Handle subscription.disable event
-     */
-    private function handleSubscriptionDisabled($data)
-    {
-   
-        if (isset($data['subscription_code'])) {
-            $subscriptionCode = $data['subscription_code'];
-            
-        
+        if ($subscriptionCode) {
             $subscription = Subscription::where('paystack_subscription_code', $subscriptionCode)->first();
             
             if ($subscription) {
                 $subscription->update([
-                    'status' => 'cancelled',
+                    'next_payment_date' => $data['subscription']['next_payment_date'],
+                    'end_date' => $data['subscription']['next_payment_date'],
                 ]);
-                
-                Log::info('Disabled subscription with code ' . $subscriptionCode);
             }
         }
     }
-
-    /**
-     * Cancel a subscription
-     */
-    public function cancelSubscription(Request $request)
-    {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['error' => 'User not authenticated'], 401);
-        }
-
-        $subscription = $user->activeSubscription();
-        
-        if (!$subscription) {
-            return response()->json(['error' => 'No active subscription found'], 404);
-        }
-
-        // If there's a Paystack subscription code, cancel it on Paystack
-        if ($subscription->paystack_subscription_code) {
-            try {
-                $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . config('paystack.secretKey'),
-                ])->post('https://api.paystack.co/subscription/disable', [
-                    'code' => $subscription->paystack_subscription_code,
-                    'token' => $subscription->paystack_email_token, 
-                ]);
-
-                if (!$response->successful()) {
-                    Log::error('Failed to cancel Paystack subscription: ' . $response->body());
-                    return response()->json(['error' => 'Could not cancel subscription on Paystack'], 500);
-                }
-            } catch (\Exception $e) {
-                Log::error('Paystack cancellation error: ' . $e->getMessage());
-                return response()->json(['error' => 'An error occurred'], 500);
-            }
-        }
-
     
-        $subscription->update([
-            'status' => 'cancelled',
-        ]);
 
-        return response()->json([
-            'message' => 'Subscription cancelled successfully',
-        ]);
-    }
 }

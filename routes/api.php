@@ -35,6 +35,9 @@ Route::post('/business-info', [ProductController::class, 'getBusinessProducts'])
 Route::get('/plans', [PlanController::class, 'index']); 
 Route::get('/plans/{id}', [PlanController::class, 'show']);
 
+// Route::post('/payment/webhook', [PaymentController::class, 'handleWebhook']); 
+// Route::get('/payment/verify/{reference}', [PaymentController::class, 'verifyPayment']);
+
 
 // Routes requiring API authentication
 Route::middleware('auth:api')->group(function () {
@@ -51,13 +54,21 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/storefront', [StoreFrontController::class, 'update']);
     Route::post('/storefront/check-slug', [StoreFrontController::class, 'checkSlugAvailability']);
     
+    // // Authenticated routes for payment and subscriptions
+    // Route::prefix('payment')->group(function () {
+    //     Route::post('/initialize', [PaymentController::class, 'initializePayment']);
+        
+    // });
 
     Route::post('/payment/initialize', [PaymentController::class, 'initializePayment']);
-    Route::get('/subscription', [PaymentController::class, 'getSubscription']);
-    Route::post('/subscription/cancel', [PaymentController::class, 'cancelSubscription']);
 
     
-
+    Route::prefix('subscription')->group(function () {
+        Route::get('/', [PaymentController::class, 'getCurrentSubscription']);
+        Route::get('/history', [PaymentController::class, 'getSubscriptionHistory']);
+        Route::post('/cancel', [PaymentController::class, 'cancelSubscription']);
+        Route::post('/upgrade', [PaymentController::class, 'upgradeSubscription']);
+    });
 });
 
 
@@ -107,5 +118,5 @@ Route::middleware(['auth:api', \App\Http\Middleware\AdminAuthorization::class])-
     });
 });
 
-Route::post('/payment/webhook', [PaymentController::class, 'handleWebhook']);
-Route::get('/payment/verify', [PaymentController::class, 'verifyPayment']);
+Route::get('/payment/callback', [PaymentController::class, 'handlePaymentCallback'])->name('payment.callback');
+Route::post('/webhooks/paystack', [PaymentController::class, 'handleWebhook']);
