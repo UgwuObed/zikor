@@ -142,14 +142,14 @@ public function verifyPayment(Request $request)
             $token = $user->createToken('auth_token')->accessToken;
 
             // Change this to redirect to your frontend URL instead of a Laravel route
-            $frontendUrl = "http://localhost:3000/plan/verify";
+            $frontendUrl = "https://zikor.shop/plan/verify";
             $successUrl = $frontendUrl . "?payment=success&token=" . $token;
             
             return redirect($successUrl);
         } else {
             $errorMessage = urlencode('Payment was not successful');
             // Change this to redirect to your frontend URL instead of a Laravel route
-            $frontendUrl = "http://localhost:3000/plan/verify";
+            $frontendUrl = "https://zikor.shop/plan/verify";
             $errorUrl = $frontendUrl . "?payment=failed&message=" . $errorMessage;
             
             return redirect($errorUrl);
@@ -158,7 +158,7 @@ public function verifyPayment(Request $request)
         Log::error('Paystack verification error: ' . $e->getMessage());
         $errorMessage = urlencode('An error occurred while verifying your payment');
         // Change this to redirect to your frontend URL instead of a Laravel route
-        $frontendUrl = "http://localhost:3000/plan/verify";
+        $frontendUrl = "https://zikor.shop/plan/verify";
         $errorUrl = $frontendUrl . "?payment=failed&message=" . $errorMessage;
         
         return redirect($errorUrl);
