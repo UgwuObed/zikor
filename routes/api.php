@@ -34,8 +34,10 @@ Route::post('/business-info', [ProductController::class, 'getBusinessProducts'])
 // Public routes for plans and payment
 Route::get('/plans', [PlanController::class, 'index']); 
 Route::get('/plans/{id}', [PlanController::class, 'show']);
-Route::post('/payment/webhook', [PaymentController::class, 'handleWebhook']); 
-Route::get('/payment/verify/{reference}', [PaymentController::class, 'verifyPayment']);
+
+// Route::post('/payment/webhook', [PaymentController::class, 'handleWebhook']); 
+// Route::get('/payment/verify/{reference}', [PaymentController::class, 'verifyPayment']);
+
 
 // Routes requiring API authentication
 Route::middleware('auth:api')->group(function () {
@@ -52,11 +54,14 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/storefront', [StoreFrontController::class, 'update']);
     Route::post('/storefront/check-slug', [StoreFrontController::class, 'checkSlugAvailability']);
     
-    // Authenticated routes for payment and subscriptions
-    Route::prefix('payment')->group(function () {
-        Route::post('/initialize', [PaymentController::class, 'initializePayment']);
+    // // Authenticated routes for payment and subscriptions
+    // Route::prefix('payment')->group(function () {
+    //     Route::post('/initialize', [PaymentController::class, 'initializePayment']);
         
-    });
+    // });
+
+    Route::post('/payment/initialize', [PaymentController::class, 'initializePayment']);
+
     
     Route::prefix('subscription')->group(function () {
         Route::get('/', [PaymentController::class, 'getCurrentSubscription']);
@@ -112,3 +117,6 @@ Route::middleware(['auth:api', \App\Http\Middleware\AdminAuthorization::class])-
         Route::post('/{id}/cancel', [AdminDashboardController::class, 'adminCancelSubscription']);
     });
 });
+
+Route::get('/payment/callback', [PaymentController::class, 'handlePaymentCallback'])->name('payment.callback');
+Route::post('/webhooks/paystack', [PaymentController::class, 'handleWebhook']);

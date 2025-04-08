@@ -60,6 +60,7 @@ return [
 
     'asset_url' => env('ASSET_URL'),
 
+    'frontend_url' => env('FRONTEND_URL', 'https://zikor.shop'),
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
