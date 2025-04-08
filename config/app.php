@@ -163,7 +163,7 @@ return [
         /*
          * Package Service Providers...
          */
-        
+        Unicodeveloper\Paystack\PaystackServiceProvider::class,
         /*
          * Application Service Providers...
          */
@@ -190,6 +190,7 @@ return [
         // 'OpenAI' => OpenAI\Laravel\Facades\OpenAI::class,
         // 'OpenAI' => OpenAI\Laravel\Facades\OpenAI::class,
         // 'Client' => OpenAI\Client::class,
+        'Paystack' => Unicodeveloper\Paystack\Facades\Paystack::class,
     ])->toArray(),
 
 ];

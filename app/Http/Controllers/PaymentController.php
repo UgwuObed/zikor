@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
+use Paystack;
 use App\Models\PendingPayment;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -37,7 +38,7 @@ class PaymentController extends Controller
         if ($plan->is_free) {
             $this->createSubscription($user, $plan, 'free', $request->billing_cycle);
             return response()->json([
-                'message' => 'You have selected the free plan',
+                'message' => 'Free plan activated successfully',
                 'redirect_url' => '/store/storefront'
             ]);
         }
@@ -46,6 +47,7 @@ class PaymentController extends Controller
         $amountInKobo = $amount * 100;
         $reference = 'zik_' . uniqid();
         
+
         $callbackUrl = route('payment.callback');
         
         $response = Http::withHeaders([
@@ -107,70 +109,69 @@ class PaymentController extends Controller
      * Handle callback from Paystack and automatically verify payment
      */
     public function handlePaymentCallback(Request $request)
-    {
-        $reference = $request->reference;
-        $frontendUrl = config('app.frontend_url', 'https://zikor.shop');
-        
-        if (!$reference) {
-            return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('No reference provided'));
-        }
+{
+    $reference = $request->reference;
+    $frontendUrl = config('app.frontend_url', 'https://zikor.shop');
     
-        
-        $pendingPayment = PendingPayment::where('reference', $reference)->first();
-        
-        if (!$pendingPayment) {
-            return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Invalid payment reference'));
-        }
-    
-      
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->paystackSecretKey,
-            'Content-Type' => 'application/json',
-        ])->get('https://api.paystack.co/transaction/verify/' . $reference);
-        
-        if (!$response->successful()) {
-            return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Payment verification failed'));
-        }
-        
-        $data = $response->json()['data'];
-        
-        if ($data['status'] !== 'success') {
-            $pendingPayment->status = 'failed';
-            $pendingPayment->save();
-            return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Payment failed'));
-        }
-    
-
-        $user = User::find($pendingPayment->user_id);
-        $plan = Plan::find($pendingPayment->plan_id);
-    
-        if (!$user || !$plan) {
-            return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Invalid user or plan'));
-        }
-    
-        try {
-        
-            $this->createSubscription(
-                $user, 
-                $plan, 
-                'paystack', 
-                $pendingPayment->billing_cycle, 
-                [
-                    'customer_code' => $data['customer']['customer_code'] ?? null,
-                    'authorization_code' => $data['authorization']['authorization_code'] ?? null
-                ]
-            );
-            
-            $pendingPayment->status = 'completed';
-            $pendingPayment->save();
-    
-        
-            return redirect()->to($frontendUrl . '/plan/payment?payment=success');
-    
-        } catch (\Exception $e) {
-            return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Error: ' . $e->getMessage()));
-        }
+    if (!$reference) {
+        return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('No reference provided'));
     }
+
+ 
+    $pendingPayment = PendingPayment::where('reference', $reference)->first();
+    
+    if (!$pendingPayment) {
+        return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Invalid payment reference'));
+    }
+
+ 
+    $response = Http::withHeaders([
+        'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+        'Content-Type' => 'application/json',
+    ])->get('https://api.paystack.co/transaction/verify/' . $reference);
+    
+    if (!$response->successful()) {
+        return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Payment verification failed'));
+    }
+    
+    $data = $response->json()['data'];
+    
+    if ($data['status'] !== 'success') {
+        $pendingPayment->status = 'failed';
+        $pendingPayment->save();
+        return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Payment failed'));
+    }
+
+    $user = User::find($pendingPayment->user_id);
+    $plan = Plan::find($pendingPayment->plan_id);
+
+    if (!$user || !$plan) {
+        return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Invalid user or plan'));
+    }
+
+    try {
+
+        $this->createSubscription(
+            $user, 
+            $plan, 
+            'paystack', 
+            $pendingPayment->billing_cycle, 
+            [
+                'customer_code' => $data['customer']['customer_code'] ?? null,
+                'authorization_code' => $data['authorization']['authorization_code'] ?? null
+            ]
+        );
+        
+        $pendingPayment->status = 'completed';
+        $pendingPayment->save();
+
+        
+        return redirect()->to($frontendUrl . '/plan/verify?payment=success');
+
+    } catch (\Exception $e) {
+        return redirect()->to($frontendUrl . '/plan?payment=failed&message=' . urlencode('Error: ' . $e->getMessage()));
+    }
+}
 
     /**
      * Create subscription record
@@ -179,7 +180,7 @@ class PaymentController extends Controller
     {
         $startDate = now();
         $endDate = $billingCycle === 'yearly' ? now()->addYear() : now()->addMonth();
-   
+        
         Subscription::where('user_id', $user->id)
             ->where('status', 'active')
             ->update(['status' => 'inactive']);
@@ -199,7 +200,7 @@ class PaymentController extends Controller
             'amount' => $billingCycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price,
         ]);
         
-      
+
         $user->current_plan_id = $plan->id;
         $user->save();
         
@@ -234,8 +235,7 @@ class PaymentController extends Controller
             Log::error('Subscription not found for successful charge', ['subscription_code' => $subscriptionCode]);
             return response()->json(['status' => 'error', 'message' => 'Subscription not found'], 404);
         }
-        
-       
+     
         $billingCycle = $subscription->billing_cycle;
         $newEndDate = $billingCycle === 'yearly' ? now()->addYear() : now()->addMonth();
         
@@ -271,7 +271,7 @@ class PaymentController extends Controller
             return response()->json(['status' => 'error', 'message' => 'User not found'], 404);
         }
         
-    
+        // Update the user's subscription with the subscription code
         Subscription::where('user_id', $user->id)
             ->whereNull('paystack_subscription_code')
             ->update(['paystack_subscription_code' => $subscriptionCode]);
